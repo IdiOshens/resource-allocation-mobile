@@ -1,17 +1,16 @@
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { AuthProvider } from '../contexts/AuthContext';
 
 export default function RootLayout() {
   return (
-    <>
+    <AuthProvider>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerShown: false,
-          animation: "fade",
-          contentStyle: {
-            backgroundColor: "#FFFFFF",
-          },
+          animation: 'fade',
+          contentStyle: { backgroundColor: '#FFFFFF' },
         }}
       >
         <Stack.Screen name="index" />
@@ -23,6 +22,6 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)/forgot-password" />
         <Stack.Screen name="(tabs)" />
       </Stack>
-    </>
+    </AuthProvider>
   );
 }
