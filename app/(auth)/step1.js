@@ -15,6 +15,7 @@ import CustomInput from '../../components/ui/CustomInput';
 import PasswordInput from '../../components/ui/PasswordInput';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 import ProgressIndicator from '../../components/ui/ProgressIndicator';
+import { COLORS } from '../../constants/colors';
 
 export default function Step1Screen() {
   const router = useRouter();
@@ -172,11 +173,11 @@ export default function Step1Screen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
   },
   scrollContent: {
     flexGrow: 1,
@@ -189,11 +190,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: COLORS.textPrimary,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666666',
+    color: COLORS.textSecondary,
     marginTop: 4,
   },
   form: {
@@ -208,11 +209,11 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   footerText: {
-    color: '#666666',
+    color: COLORS.textSecondary,
     fontSize: 14,
   },
   footerLink: {
-    color: '#4A90E2',
+    color: COLORS.primary,
     fontSize: 14,
     fontWeight: '600',
   },

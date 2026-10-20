@@ -4,9 +4,13 @@ import {
     ActivityIndicator,
     Alert,
     FlatList,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
     RefreshControl,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -18,6 +22,7 @@ import {
     fetchPendingBookings,
     rejectBooking,
 } from "../../services/api/auth";
+import { COLORS } from "../../constants/colors";
 
 export default function ApprovalsScreen() {
   const { token, role } = useAuth();
@@ -26,6 +31,8 @@ export default function ApprovalsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [processingId, setProcessingId] = useState(null);
+  const [rejectionBookingId, setRejectionBookingId] = useState(null);
+  const [rejectionNotes, setRejectionNotes] = useState("");
 
   const load = async () => {
     try {
@@ -71,46 +78,43 @@ export default function ApprovalsScreen() {
   };
 
   const handleReject = (id) => {
-    Alert.prompt
-      ? Alert.prompt("Reject Booking", "Reason (optional)", async (notes) => {
-          setProcessingId(id);
-          try {
-            const result = await rejectBooking(token, id, notes || "");
-            if (result.success) {
-              setBookings((prev) => prev.filter((b) => b.allocation_id !== id));
-              Alert.alert("Rejected", "Booking rejected.");
-            } else {
-              Alert.alert("Failed", result.message);
-            }
-          } catch {
-            Alert.alert("Connection Error", "Could not reach the server.");
-          } finally {
-            setProcessingId(null);
-          }
-        })
-      : (async () => {
-          setProcessingId(id);
-          try {
-            const result = await rejectBooking(token, id, "");
-            if (result.success) {
-              setBookings((prev) => prev.filter((b) => b.allocation_id !== id));
-              Alert.alert("Rejected", "Booking rejected.");
-            } else {
-              Alert.alert("Failed", result.message);
-            }
-          } catch {
-            Alert.alert("Connection Error", "Could not reach the server.");
-          } finally {
-            setProcessingId(null);
-          }
-        })();
+    setRejectionNotes("");
+    setRejectionBookingId(id);
+  };
+
+  const closeRejectModal = () => {
+    if (processingId !== null) return;
+    setRejectionBookingId(null);
+    setRejectionNotes("");
+  };
+
+  const submitRejection = async () => {
+    const id = rejectionBookingId;
+    if (id === null) return;
+
+    setProcessingId(id);
+    try {
+      const result = await rejectBooking(token, id, rejectionNotes.trim());
+      if (result.success) {
+        setBookings((prev) => prev.filter((b) => b.allocation_id !== id));
+        setRejectionBookingId(null);
+        setRejectionNotes("");
+        Alert.alert("Rejected", "Booking rejected.");
+      } else {
+        Alert.alert("Failed", result.message);
+      }
+    } catch {
+      Alert.alert("Connection Error", "Could not reach the server.");
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#4A90E2" />
+          <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Loading pending bookings…</Text>
         </View>
       </SafeAreaView>
@@ -144,7 +148,7 @@ export default function ApprovalsScreen() {
           onPress={() => handleApprove(item.allocation_id)}
           disabled={processingId === item.allocation_id}
         >
-          <Ionicons name="checkmark-circle-outline" size={18} color="#FFF" />
+          <Ionicons name="checkmark-circle-outline" size={18} color={COLORS.surface} />
           <Text style={styles.actionText}>Approve</Text>
         </TouchableOpacity>
 
@@ -153,7 +157,7 @@ export default function ApprovalsScreen() {
           onPress={() => handleReject(item.allocation_id)}
           disabled={processingId === item.allocation_id}
         >
-          <Ionicons name="close-circle-outline" size={18} color="#FFF" />
+          <Ionicons name="close-circle-outline" size={18} color={COLORS.surface} />
           <Text style={styles.actionText}>Reject</Text>
         </TouchableOpacity>
       </View>
@@ -162,6 +166,50 @@ export default function ApprovalsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Modal
+        visible={rejectionBookingId !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={closeRejectModal}
+      >
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.rejectModal}>
+            <Text style={styles.modalTitle}>Reject Booking</Text>
+            <Text style={styles.modalDescription}>Reason (optional)</Text>
+            <TextInput
+              style={styles.reasonInput}
+              value={rejectionNotes}
+              onChangeText={setRejectionNotes}
+              placeholder="Enter a reason for rejection"
+              placeholderTextColor={COLORS.textMuted}
+              multiline
+              textAlignVertical="top"
+              editable={processingId === null}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={closeRejectModal}
+                disabled={processingId !== null}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmRejectButton]}
+                onPress={submitRejection}
+                disabled={processingId !== null}
+              >
+                <Text style={styles.confirmRejectText}>
+                  {processingId !== null ? "Rejecting…" : "Reject"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
       <View style={styles.header}>
         <Text style={styles.title}>Pending Approvals</Text>
         <Text style={styles.subtitle}>{bookings.length} awaiting review</Text>
@@ -169,7 +217,7 @@ export default function ApprovalsScreen() {
 
       {error ? (
         <View style={styles.center}>
-          <Ionicons name="alert-circle-outline" size={48} color="#E74C3C" />
+          <Ionicons name="alert-circle-outline" size={48} color={COLORS.danger} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={load}>
             <Text style={styles.retryText}>Retry</Text>
@@ -198,7 +246,63 @@ export default function ApprovalsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "rgba(12, 31, 63, 0.5)",
+  },
+  rejectModal: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: COLORS.textPrimary,
+  },
+  modalDescription: {
+    marginTop: 6,
+    marginBottom: 12,
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  reasonInput: {
+    minHeight: 110,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 10,
+    padding: 12,
+    color: COLORS.textPrimary,
+    backgroundColor: COLORS.surfaceAlt,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 10,
+    marginTop: 16,
+  },
+  modalButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  cancelButton: {
+    backgroundColor: COLORS.surfaceAlt,
+  },
+  cancelButtonText: {
+    color: COLORS.textSecondary,
+    fontWeight: "600",
+  },
+  confirmRejectButton: {
+    backgroundColor: COLORS.danger,
+  },
+  confirmRejectText: {
+    color: COLORS.surface,
+    fontWeight: "600",
+  },
   center: {
     flex: 1,
     justifyContent: "center",
@@ -206,11 +310,11 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title: { fontSize: 26, fontWeight: "bold", color: "#1A1A1A" },
-  subtitle: { fontSize: 14, color: "#666", marginTop: 4 },
+  title: { fontSize: 26, fontWeight: "bold", color: COLORS.textPrimary },
+  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4 },
   list: { paddingHorizontal: 16, paddingBottom: 24 },
   card: {
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
@@ -229,12 +333,12 @@ const styles = StyleSheet.create({
   resourceName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: COLORS.textPrimary,
     flex: 1,
     marginRight: 8,
   },
   badge: {
-    backgroundColor: "#EEF4FB",
+    backgroundColor: COLORS.surfaceAlt,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -242,10 +346,10 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#4A90E2",
+    color: COLORS.primary,
     textTransform: "uppercase",
   },
-  meta: { fontSize: 13, color: "#555", marginTop: 2 },
+  meta: { fontSize: 13, color: COLORS.textSecondary, marginTop: 2 },
   actions: { flexDirection: "row", gap: 10, marginTop: 14 },
   actionBtn: {
     flex: 1,
@@ -256,23 +360,23 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     gap: 6,
   },
-  approveBtn: { backgroundColor: "#2ECC71" },
-  rejectBtn: { backgroundColor: "#E74C3C" },
-  actionText: { color: "#FFF", fontWeight: "700", fontSize: 14 },
-  loadingText: { marginTop: 12, color: "#666" },
+  approveBtn: { backgroundColor: COLORS.success },
+  rejectBtn: { backgroundColor: COLORS.danger },
+  actionText: { color: COLORS.surface, fontWeight: "700", fontSize: 14 },
+  loadingText: { marginTop: 12, color: COLORS.textSecondary },
   errorText: {
     marginTop: 12,
-    color: "#E74C3C",
+    color: COLORS.danger,
     fontSize: 15,
     textAlign: "center",
   },
   retryBtn: {
     marginTop: 16,
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 10,
   },
-  retryText: { color: "#FFF", fontWeight: "600" },
-  emptyText: { color: "#888", fontSize: 14 },
+  retryText: { color: COLORS.surface, fontWeight: "600" },
+  emptyText: { color: COLORS.textMuted, fontSize: 14 },
 });

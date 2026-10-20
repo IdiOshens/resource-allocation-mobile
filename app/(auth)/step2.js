@@ -19,6 +19,7 @@ import CustomInput from "../../components/ui/CustomInput";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import ProgressIndicator from "../../components/ui/ProgressIndicator";
 import { registerUser } from "../../services/api/auth";
+import { COLORS } from "../../constants/colors";
 
 // Each department has an id that matches the departments table.
 const DEPARTMENTS = [
@@ -126,7 +127,7 @@ export default function Step2Screen() {
         {item.name}
       </Text>
       {selectedDepartment?.id === item.id && (
-        <Ionicons name="checkmark-circle" size={20} color="#4A90E2" />
+        <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />
       )}
     </TouchableOpacity>
   );
@@ -148,7 +149,7 @@ export default function Step2Screen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="arrow-back-outline" size={24} color="#4A90E2" />
+            <Ionicons name="arrow-back-outline" size={24} color={COLORS.primary} />
             <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
 
@@ -214,7 +215,7 @@ export default function Step2Screen() {
                 >
                   {selectedDepartment?.name || "Select department"}
                 </Text>
-                <Ionicons name="chevron-down" size={20} color="#888" />
+                <Ionicons name="chevron-down" size={20} color={COLORS.textMuted} />
               </TouchableOpacity>
               {errors.department && (
                 <Text style={styles.errorText}>{errors.department}</Text>
@@ -249,7 +250,7 @@ export default function Step2Screen() {
               <TouchableOpacity
                 onPress={() => setShowDepartmentDropdown(false)}
               >
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={COLORS.textSecondary} />
               </TouchableOpacity>
             </View>
             <FlatList
@@ -266,46 +267,46 @@ export default function Step2Screen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#FFFFFF" },
-  container: { flex: 1, backgroundColor: "#FFFFFF" },
+  safeArea: { flex: 1, backgroundColor: COLORS.surface },
+  container: { flex: 1, backgroundColor: COLORS.surface },
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingBottom: 40 },
   backButton: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
-  backText: { fontSize: 16, color: "#4A90E2", marginLeft: 4 },
+  backText: { fontSize: 16, color: COLORS.primary, marginLeft: 4 },
   header: { marginBottom: 24 },
-  title: { fontSize: 28, fontWeight: "bold", color: "#1A1A1A" },
-  subtitle: { fontSize: 16, color: "#666666", marginTop: 4 },
+  title: { fontSize: 28, fontWeight: "bold", color: COLORS.textPrimary },
+  subtitle: { fontSize: 16, color: COLORS.textSecondary, marginTop: 4 },
   form: { flex: 1 },
   inputGroup: { marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: "600", color: "#333333", marginBottom: 6 },
-  required: { color: "#E74C3C" },
+  label: { fontSize: 14, fontWeight: "600", color: COLORS.textSecondary, marginBottom: 6 },
+  required: { color: COLORS.danger },
   roleContainer: { flexDirection: "row", gap: 10 },
   roleOption: {
     flex: 1,
     paddingVertical: 12,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: "#E0E0E0",
+    borderColor: COLORS.border,
     alignItems: "center",
-    backgroundColor: "#FAFAFA",
+    backgroundColor: COLORS.surfaceAlt,
   },
-  roleOptionSelected: { backgroundColor: "#4A90E2", borderColor: "#4A90E2" },
-  roleText: { fontSize: 14, color: "#666666", fontWeight: "500" },
-  roleTextSelected: { color: "#FFFFFF" },
+  roleOptionSelected: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  roleText: { fontSize: 14, color: COLORS.textSecondary, fontWeight: "500" },
+  roleTextSelected: { color: COLORS.surface },
   dropdownTrigger: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#E8E8E8",
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: COLORS.surfaceAlt,
   },
-  dropdownTriggerText: { fontSize: 16, color: "#1A1A1A" },
-  dropdownPlaceholder: { color: "#999999" },
-  inputError: { borderColor: "#E74C3C" },
-  errorText: { color: "#E74C3C", fontSize: 12, marginTop: 4 },
+  dropdownTriggerText: { fontSize: 16, color: COLORS.textPrimary },
+  dropdownPlaceholder: { color: COLORS.textMuted },
+  inputError: { borderColor: COLORS.danger },
+  errorText: { color: COLORS.danger, fontSize: 12, marginTop: 4 },
   createButton: { marginTop: 8 },
   modalOverlay: {
     flex: 1,
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
     padding: 20,
     width: "90%",
@@ -327,9 +328,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    borderBottomColor: COLORS.border,
   },
-  modalTitle: { fontSize: 18, fontWeight: "bold", color: "#1A1A1A" },
+  modalTitle: { fontSize: 18, fontWeight: "bold", color: COLORS.textPrimary },
   dropdownItem: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -337,9 +338,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F5F5F5",
+    borderBottomColor: COLORS.border,
   },
-  dropdownItemSelected: { backgroundColor: "#F0F7FF" },
-  dropdownItemText: { fontSize: 16, color: "#333333" },
-  dropdownItemTextSelected: { color: "#4A90E2", fontWeight: "600" },
+  dropdownItemSelected: { backgroundColor: COLORS.surfaceAlt },
+  dropdownItemText: { fontSize: 16, color: COLORS.textSecondary },
+  dropdownItemTextSelected: { color: COLORS.primary, fontWeight: "600" },
 });

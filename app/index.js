@@ -8,6 +8,7 @@ import {
     View,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { COLORS } from '../constants/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -105,7 +106,7 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#4A90E2',
+    backgroundColor: COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -130,17 +131,17 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 40,
     fontWeight: 'bold',
-    color: '#4A90E2',
+    color: COLORS.primary,
   },
   appTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: COLORS.surface,
     textAlign: 'center',
   },
   appSubtitle: {
     fontSize: 15,
-    color: '#FFFFFF',
+    color: COLORS.surface,
     opacity: 0.85,
     marginTop: 6,
     textAlign: 'center',
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
   loadingProgress: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.surface,
     borderRadius: 4,
     transform: [{ scaleX: 0 }],
   },
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerText: {
-    color: '#FFFFFF',
+    color: COLORS.surface,
     opacity: 0.6,
     fontSize: 12,
     marginTop: 2,

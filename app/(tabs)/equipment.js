@@ -1,12 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
     FlatList,
     RefreshControl,
+    ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -14,6 +16,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { fetchEquipment } from "../../services/api/auth";
+import { COLORS } from "../../constants/colors";
+import NotificationBell from "../../components/ui/NotificationBell";
+
+const EQUIPMENT_FILTERS = [
+  { label: "All", value: "all" },
+  { label: "Available", value: "available" },
+  { label: "In Use", value: "in_use" },
+  { label: "Maintenance", value: "maintenance" },
+];
 
 export default function EquipmentScreen() {
   const { token } = useAuth();
@@ -22,8 +33,10 @@ export default function EquipmentScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
 
-  const loadEquipment = async () => {
+  const loadEquipment = useCallback(async () => {
     try {
       setError(null);
       const result = await fetchEquipment(token);
@@ -33,17 +46,17 @@ export default function EquipmentScreen() {
       } else {
         setError(result.message);
       }
-    } catch (err) {
+    } catch {
       setError("Could not reach the server.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     loadEquipment();
-  }, []);
+  }, [loadEquipment]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -83,32 +96,51 @@ export default function EquipmentScreen() {
 
       {item.battery_health !== null && (
         <View style={styles.metaRow}>
-          <Ionicons name="battery-half-outline" size={14} color="#666" />
+          <Ionicons name="battery-half-outline" size={14} color={COLORS.textSecondary} />
           <Text style={styles.metaText}> Battery: {item.battery_health}%</Text>
         </View>
       )}
 
       {item.current_location && (
         <View style={styles.metaRow}>
-          <Ionicons name="location-outline" size={14} color="#666" />
+          <Ionicons name="location-outline" size={14} color={COLORS.textSecondary} />
           <Text style={styles.metaText}> {item.current_location}</Text>
         </View>
       )}
 
       {item.department_name && (
         <View style={styles.metaRow}>
-          <Ionicons name="business-outline" size={14} color="#666" />
+          <Ionicons name="business-outline" size={14} color={COLORS.textSecondary} />
           <Text style={styles.metaText}> {item.department_name}</Text>
         </View>
       )}
     </TouchableOpacity>
   );
 
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredEquipment = equipment.filter((item) => {
+    const matchesSearch =
+      !normalizedSearch ||
+      String(item.equipment_name ?? "").toLowerCase().includes(normalizedSearch) ||
+      String(item.equipment_type ?? "").toLowerCase().includes(normalizedSearch);
+    const normalizedStatus = String(item.status ?? "")
+      .toLowerCase()
+      .replace(/[\s-]+/g, "_");
+    const matchesStatus =
+      activeFilter === "all" ||
+      (activeFilter === "in_use"
+        ? normalizedStatus === "in_use" || normalizedStatus === "inuse"
+        : activeFilter === "maintenance"
+          ? normalizedStatus.includes("maintenance")
+          : normalizedStatus === activeFilter);
+    return matchesSearch && matchesStatus;
+  });
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#4A90E2" />
+          <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Loading equipment…</Text>
         </View>
       </SafeAreaView>
@@ -119,7 +151,7 @@ export default function EquipmentScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <Ionicons name="alert-circle-outline" size={48} color="#E74C3C" />
+          <Ionicons name="alert-circle-outline" size={48} color={COLORS.danger} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadEquipment}>
             <Text style={styles.retryText}>Retry</Text>
@@ -132,12 +164,62 @@ export default function EquipmentScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Equipment</Text>
-        <Text style={styles.subtitle}>{equipment.length} items</Text>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>Equipment</Text>
+            <Text style={styles.subtitle}>{filteredEquipment.length} items</Text>
+          </View>
+          <NotificationBell />
+        </View>
+      </View>
+
+      <View style={styles.filters}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search-outline" size={19} color={COLORS.textMuted} />
+          <TextInput
+            style={styles.searchInput}
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search equipment or type"
+            placeholderTextColor={COLORS.textMuted}
+            returnKeyType="search"
+            accessibilityLabel="Search equipment"
+          />
+          {search ? (
+            <TouchableOpacity
+              onPress={() => setSearch("")}
+              accessibilityLabel="Clear search"
+            >
+              <Ionicons name="close-circle" size={19} color={COLORS.textMuted} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipRow}
+        >
+          {EQUIPMENT_FILTERS.map((filter) => {
+            const selected = activeFilter === filter.value;
+            return (
+              <TouchableOpacity
+                key={filter.value}
+                style={[styles.chip, selected && styles.chipSelected]}
+                onPress={() => setActiveFilter(filter.value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+              >
+                <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
       <FlatList
-        data={equipment}
+        data={filteredEquipment}
         keyExtractor={(item) => String(item.equipment_id)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
@@ -146,7 +228,11 @@ export default function EquipmentScreen() {
         }
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>No equipment found</Text>
+            <Text style={styles.emptyText}>
+              {normalizedSearch || activeFilter !== "all"
+                ? "No results found"
+                : "No equipment found"}
+            </Text>
           </View>
         }
       />
@@ -155,7 +241,7 @@ export default function EquipmentScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
+  container: { flex: 1, backgroundColor: COLORS.background },
   center: {
     flex: 1,
     justifyContent: "center",
@@ -163,11 +249,43 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title: { fontSize: 26, fontWeight: "bold", color: "#1A1A1A" },
-  subtitle: { fontSize: 14, color: "#666", marginTop: 4 },
+  title: { fontSize: 26, fontWeight: "bold", color: COLORS.textPrimary },
+  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4 },
+  filters: { paddingBottom: 8 },
+  searchBox: {
+    minHeight: 46,
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    paddingVertical: 10,
+    color: COLORS.textPrimary,
+    fontSize: 14,
+  },
+  chipRow: { paddingHorizontal: 16, gap: 8 },
+  chip: {
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 18,
+    backgroundColor: COLORS.surface,
+  },
+  chipSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
+  chipText: { color: COLORS.textSecondary, fontSize: 12, fontWeight: "600" },
+  chipTextSelected: { color: COLORS.surface },
   list: { paddingHorizontal: 16, paddingBottom: 24 },
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
@@ -185,36 +303,36 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: COLORS.textPrimary,
     flex: 1,
     marginRight: 8,
   },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  statusAvailable: { backgroundColor: "#E8F8F0" },
-  statusOther: { backgroundColor: "#F0F0F0" },
+  statusAvailable: { backgroundColor: COLORS.successBg },
+  statusOther: { backgroundColor: COLORS.neutralBg },
   statusText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#333",
+    color: COLORS.textSecondary,
     textTransform: "capitalize",
   },
-  type: { fontSize: 13, color: "#666", marginTop: 4 },
+  type: { fontSize: 13, color: COLORS.textSecondary, marginTop: 4 },
   metaRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
-  metaText: { fontSize: 13, color: "#666" },
-  loadingText: { marginTop: 12, color: "#666" },
+  metaText: { fontSize: 13, color: COLORS.textSecondary },
+  loadingText: { marginTop: 12, color: COLORS.textSecondary },
   errorText: {
     marginTop: 12,
-    color: "#E74C3C",
+    color: COLORS.danger,
     fontSize: 15,
     textAlign: "center",
   },
   retryButton: {
     marginTop: 16,
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 10,
   },
-  retryText: { color: "#FFF", fontWeight: "600" },
-  emptyText: { color: "#888", fontSize: 14 },
+  retryText: { color: COLORS.surface, fontWeight: "600" },
+  emptyText: { color: COLORS.textMuted, fontSize: 14 },
 });

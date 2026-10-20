@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { COLORS } from "../../constants/colors";
 
 export default function ProgressIndicator({ currentStep, totalSteps = 2 }) {
   return (
@@ -56,33 +57,33 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: COLORS.border,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#E0E0E0",
+    borderColor: COLORS.border,
   },
   stepDotActive: {
-    borderColor: "#4A90E2",
-    backgroundColor: "#4A90E2",
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.primary,
   },
   stepDotCompleted: {
-    backgroundColor: "#2ECC71",
-    borderColor: "#2ECC71",
+    backgroundColor: COLORS.success,
+    borderColor: COLORS.success,
   },
   stepCheck: {
-    color: "#FFFFFF",
+    color: COLORS.surface,
     fontSize: 14,
     fontWeight: "bold",
   },
   stepLine: {
     width: 60,
     height: 2,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: COLORS.border,
     marginHorizontal: 4,
   },
   stepLineCompleted: {
-    backgroundColor: "#2ECC71",
+    backgroundColor: COLORS.success,
   },
   labelsContainer: {
     flexDirection: "row",
@@ -92,10 +93,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: "#999999",
+    color: COLORS.textMuted,
   },
   labelActive: {
-    color: "#4A90E2",
+    color: COLORS.primary,
     fontWeight: "600",
   },
 });

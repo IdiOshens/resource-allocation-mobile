@@ -4,6 +4,7 @@ import {
     Text,
     TouchableOpacity,
 } from "react-native";
+import { COLORS } from "../../constants/colors";
 
 export default function PrimaryButton({
   title,
@@ -48,7 +49,7 @@ export default function PrimaryButton({
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={type === "primary" ? "#FFFFFF" : "#4A90E2"} />
+        <ActivityIndicator color={type === "primary" ? COLORS.surface : COLORS.primary} />
       ) : (
         <Text style={[styles.buttonText, getTextStyle()]}>{title}</Text>
       )}
@@ -65,15 +66,15 @@ const styles = StyleSheet.create({
     minHeight: 54,
   },
   primaryButton: {
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
   },
   secondaryButton: {
-    backgroundColor: "#2ECC71",
+    backgroundColor: COLORS.success,
   },
   outlineButton: {
     backgroundColor: "transparent",
     borderWidth: 1.5,
-    borderColor: "#4A90E2",
+    borderColor: COLORS.primary,
   },
   disabledButton: {
     opacity: 0.6,
@@ -83,12 +84,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   primaryText: {
-    color: "#FFFFFF",
+    color: COLORS.surface,
   },
   secondaryText: {
-    color: "#FFFFFF",
+    color: COLORS.surface,
   },
   outlineText: {
-    color: "#4A90E2",
+    color: COLORS.primary,
   },
 });
