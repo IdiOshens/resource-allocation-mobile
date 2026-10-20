@@ -1,12 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -14,6 +16,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { fetchClassrooms } from "../../services/api/auth";
+import { COLORS } from "../../constants/colors";
+import NotificationBell from "../../components/ui/NotificationBell";
+
+const CLASSROOM_FILTERS = [
+  { label: "All", value: "all" },
+  { label: "Has Projector", value: "has_projector" },
+  { label: "Has Computers", value: "has_computers" },
+  { label: "Has WiFi", value: "has_wifi" },
+];
 
 export default function ClassroomsScreen() {
   const { token } = useAuth();
@@ -22,8 +33,10 @@ export default function ClassroomsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
 
-  const loadClassrooms = async () => {
+  const loadClassrooms = useCallback(async () => {
     try {
       setError(null);
       const result = await fetchClassrooms(token);
@@ -33,17 +46,17 @@ export default function ClassroomsScreen() {
       } else {
         setError(result.message);
       }
-    } catch (err) {
+    } catch {
       setError("Could not reach the server.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     loadClassrooms();
-  }, []);
+  }, [loadClassrooms]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -89,7 +102,7 @@ export default function ClassroomsScreen() {
       <Text style={styles.roomType}>{item.room_type.replace("_", " ")}</Text>
 
       <View style={styles.metaRow}>
-        <Ionicons name="people-outline" size={14} color="#666" />
+        <Ionicons name="people-outline" size={14} color={COLORS.textSecondary} />
         <Text style={styles.metaText}> Capacity: {item.capacity}</Text>
       </View>
 
@@ -114,11 +127,24 @@ export default function ClassroomsScreen() {
     </TouchableOpacity>
   );
 
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredClassrooms = classrooms.filter((item) => {
+    const matchesSearch =
+      !normalizedSearch ||
+      String(item.room_number ?? "").toLowerCase().includes(normalizedSearch) ||
+      String(item.building ?? "").toLowerCase().includes(normalizedSearch);
+    const matchesFeature =
+      activeFilter === "all" ||
+      item[activeFilter] === true ||
+      Number(item[activeFilter]) === 1;
+    return matchesSearch && matchesFeature;
+  });
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#4A90E2" />
+          <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Loading classrooms…</Text>
         </View>
       </SafeAreaView>
@@ -129,7 +155,7 @@ export default function ClassroomsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <Ionicons name="alert-circle-outline" size={48} color="#E74C3C" />
+          <Ionicons name="alert-circle-outline" size={48} color={COLORS.danger} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadClassrooms}>
             <Text style={styles.retryText}>Retry</Text>
@@ -142,12 +168,64 @@ export default function ClassroomsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Classrooms</Text>
-        <Text style={styles.subtitle}>{classrooms.length} rooms available</Text>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.title}>Classrooms</Text>
+            <Text style={styles.subtitle}>
+              {filteredClassrooms.length} rooms available
+            </Text>
+          </View>
+          <NotificationBell />
+        </View>
+      </View>
+
+      <View style={styles.filters}>
+        <View style={styles.searchBox}>
+          <Ionicons name="search-outline" size={19} color={COLORS.textMuted} />
+          <TextInput
+            style={styles.searchInput}
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search room or building"
+            placeholderTextColor={COLORS.textMuted}
+            returnKeyType="search"
+            accessibilityLabel="Search classrooms"
+          />
+          {search ? (
+            <TouchableOpacity
+              onPress={() => setSearch("")}
+              accessibilityLabel="Clear search"
+            >
+              <Ionicons name="close-circle" size={19} color={COLORS.textMuted} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipRow}
+        >
+          {CLASSROOM_FILTERS.map((filter) => {
+            const selected = activeFilter === filter.value;
+            return (
+              <TouchableOpacity
+                key={filter.value}
+                style={[styles.chip, selected && styles.chipSelected]}
+                onPress={() => setActiveFilter(filter.value)}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+              >
+                <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
       <FlatList
-        data={classrooms}
+        data={filteredClassrooms}
         keyExtractor={(item) => String(item.classroom_id)}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
@@ -156,7 +234,11 @@ export default function ClassroomsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.center}>
-            <Text style={styles.emptyText}>No classrooms found</Text>
+            <Text style={styles.emptyText}>
+              {normalizedSearch || activeFilter !== "all"
+                ? "No results found"
+                : "No classrooms found"}
+            </Text>
           </View>
         }
       />
@@ -167,14 +249,14 @@ export default function ClassroomsScreen() {
 function Feature({ icon, label }) {
   return (
     <View style={styles.feature}>
-      <Ionicons name={icon} size={13} color="#4A90E2" />
+      <Ionicons name={icon} size={13} color={COLORS.primary} />
       <Text style={styles.featureLabel}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
+  container: { flex: 1, backgroundColor: COLORS.background },
   center: {
     flex: 1,
     justifyContent: "center",
@@ -182,11 +264,44 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
-  title: { fontSize: 26, fontWeight: "bold", color: "#1A1A1A" },
-  subtitle: { fontSize: 14, color: "#666", marginTop: 4 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  filters: { paddingBottom: 8 },
+  searchBox: {
+    minHeight: 46,
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    paddingVertical: 10,
+    color: COLORS.textPrimary,
+    fontSize: 14,
+  },
+  chipRow: { paddingHorizontal: 16, gap: 8 },
+  chip: {
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 18,
+    backgroundColor: COLORS.surface,
+  },
+  chipSelected: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
+  chipText: { color: COLORS.textSecondary, fontSize: 12, fontWeight: "600" },
+  chipTextSelected: { color: COLORS.surface },
+  title: { fontSize: 26, fontWeight: "bold", color: COLORS.textPrimary },
+  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4 },
   list: { paddingHorizontal: 16, paddingBottom: 24 },
   card: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
@@ -201,24 +316,24 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  roomNumber: { fontSize: 17, fontWeight: "700", color: "#1A1A1A" },
+  roomNumber: { fontSize: 17, fontWeight: "700", color: COLORS.textPrimary },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  statusAvailable: { backgroundColor: "#E8F8F0" },
-  statusOther: { backgroundColor: "#F0F0F0" },
+  statusAvailable: { backgroundColor: COLORS.successBg },
+  statusOther: { backgroundColor: COLORS.neutralBg },
   statusText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#333",
+    color: COLORS.textSecondary,
     textTransform: "capitalize",
   },
   roomType: {
     fontSize: 13,
-    color: "#666",
+    color: COLORS.textSecondary,
     marginTop: 4,
     textTransform: "capitalize",
   },
   metaRow: { flexDirection: "row", alignItems: "center", marginTop: 10 },
-  metaText: { fontSize: 13, color: "#666" },
+  metaText: { fontSize: 13, color: COLORS.textSecondary },
   featuresRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -229,38 +344,38 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#EEF4FB",
+    backgroundColor: COLORS.surfaceAlt,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
-  featureLabel: { fontSize: 11, color: "#4A90E2", fontWeight: "600" },
-  loadingText: { marginTop: 12, color: "#666" },
+  featureLabel: { fontSize: 11, color: COLORS.primary, fontWeight: "600" },
+  loadingText: { marginTop: 12, color: COLORS.textSecondary },
   errorText: {
     marginTop: 12,
-    color: "#E74C3C",
+    color: COLORS.danger,
     fontSize: 15,
     textAlign: "center",
   },
   retryButton: {
     marginTop: 16,
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 10,
   },
-  retryText: { color: "#FFF", fontWeight: "600" },
-  emptyText: { color: "#888", fontSize: 14 },
+  retryText: { color: COLORS.surface, fontWeight: "600" },
+  emptyText: { color: COLORS.textMuted, fontSize: 14 },
 
   busyBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: "#FFF4E5",
+    backgroundColor: COLORS.warningBg,
   },
   busyText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#B7700B",
+    color: COLORS.warning,
   },
 });

@@ -14,13 +14,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "../../contexts/AuthContext";
 import { fetchMyBookings } from "../../services/api/auth";
+import { COLORS } from "../../constants/colors";
+import NotificationBell from "../../components/ui/NotificationBell";
 
 const STATUS_COLORS = {
-  pending: { bg: "#FFF4E5", fg: "#B7700B" },
-  approved: { bg: "#E8F8F0", fg: "#1E8449" },
-  rejected: { bg: "#FDEDEC", fg: "#B03A2E" },
-  cancelled: { bg: "#F0F0F0", fg: "#666666" },
-  completed: { bg: "#EAF2F8", fg: "#21618C" },
+  pending: { bg: COLORS.warningBg, fg: COLORS.warning },
+  approved: { bg: COLORS.successBg, fg: COLORS.success },
+  rejected: { bg: COLORS.dangerBg, fg: COLORS.danger },
+  cancelled: { bg: COLORS.neutralBg, fg: COLORS.textSecondary },
+  completed: { bg: COLORS.surfaceAlt, fg: COLORS.primary },
 };
 
 /**
@@ -112,7 +114,7 @@ export default function MyBookingsScreen() {
         </View>
 
         <View style={styles.metaRow}>
-          <Ionicons name="calendar-outline" size={14} color="#666" />
+          <Ionicons name="calendar-outline" size={14} color={COLORS.textSecondary} />
           <Text style={[styles.metaText, past && styles.textPast]}>
             {" "}
             {item.allocation_date}
@@ -120,7 +122,7 @@ export default function MyBookingsScreen() {
         </View>
 
         <View style={styles.metaRow}>
-          <Ionicons name="time-outline" size={14} color="#666" />
+          <Ionicons name="time-outline" size={14} color={COLORS.textSecondary} />
           <Text style={[styles.metaText, past && styles.textPast]}>
             {" "}
             {item.start_time} → {item.end_time}
@@ -128,7 +130,7 @@ export default function MyBookingsScreen() {
         </View>
 
         <View style={styles.metaRow}>
-          <Ionicons name="document-text-outline" size={14} color="#666" />
+          <Ionicons name="document-text-outline" size={14} color={COLORS.textSecondary} />
           <Text
             style={[styles.metaText, past && styles.textPast]}
             numberOfLines={2}
@@ -145,7 +147,7 @@ export default function MyBookingsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#4A90E2" />
+          <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Loading your bookings…</Text>
         </View>
       </SafeAreaView>
@@ -162,26 +164,29 @@ export default function MyBookingsScreen() {
           </Text>
         </View>
 
-        {past.length > 0 && (
-          <TouchableOpacity
-            style={styles.toggleBtn}
-            onPress={() => setShowHistory(!showHistory)}
-          >
-            <Ionicons
-              name={showHistory ? "eye-off-outline" : "time-outline"}
-              size={16}
-              color="#4A90E2"
-            />
-            <Text style={styles.toggleText}>
-              {showHistory ? "Hide" : "History"}
-            </Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.headerActions}>
+          {past.length > 0 && (
+            <TouchableOpacity
+              style={styles.toggleBtn}
+              onPress={() => setShowHistory(!showHistory)}
+            >
+              <Ionicons
+                name={showHistory ? "eye-off-outline" : "time-outline"}
+                size={16}
+                color={COLORS.primary}
+              />
+              <Text style={styles.toggleText}>
+                {showHistory ? "Hide" : "History"}
+              </Text>
+            </TouchableOpacity>
+          )}
+          <NotificationBell />
+        </View>
       </View>
 
       {error ? (
         <View style={styles.center}>
-          <Ionicons name="alert-circle-outline" size={48} color="#E74C3C" />
+          <Ionicons name="alert-circle-outline" size={48} color={COLORS.danger} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryBtn} onPress={load}>
             <Text style={styles.retryText}>Retry</Text>
@@ -202,7 +207,7 @@ export default function MyBookingsScreen() {
           }
           ListEmptyComponent={
             <View style={styles.center}>
-              <Ionicons name="calendar-outline" size={48} color="#CCC" />
+              <Ionicons name="calendar-outline" size={48} color={COLORS.textMuted} />
               <Text style={styles.emptyText}>
                 You have no upcoming bookings.
               </Text>
@@ -218,7 +223,7 @@ export default function MyBookingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
+  container: { flex: 1, backgroundColor: COLORS.background },
   center: {
     flex: 1,
     justifyContent: "center",
@@ -230,10 +235,16 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
   },
-  title: { fontSize: 26, fontWeight: "bold", color: "#1A1A1A" },
-  subtitle: { fontSize: 14, color: "#666", marginTop: 4 },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  title: { fontSize: 26, fontWeight: "bold", color: COLORS.textPrimary },
+  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4 },
   toggleBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -241,14 +252,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: "#EEF4FB",
+    backgroundColor: COLORS.surfaceAlt,
   },
-  toggleText: { fontSize: 13, color: "#4A90E2", fontWeight: "600" },
+  toggleText: { fontSize: 13, color: COLORS.primary, fontWeight: "600" },
   list: { paddingHorizontal: 16, paddingBottom: 24 },
   sectionHeader: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#888",
+    color: COLORS.textMuted,
     textTransform: "uppercase",
     letterSpacing: 1,
     marginTop: 12,
@@ -256,7 +267,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   card: {
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
@@ -275,33 +286,33 @@ const styles = StyleSheet.create({
   resourceName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1A1A1A",
+    color: COLORS.textPrimary,
     flex: 1,
     marginRight: 8,
   },
-  textPast: { color: "#777" },
+  textPast: { color: COLORS.textMuted },
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
   badgeText: { fontSize: 11, fontWeight: "700", textTransform: "uppercase" },
   metaRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
-  metaText: { fontSize: 13, color: "#555" },
-  loadingText: { marginTop: 12, color: "#666" },
+  metaText: { fontSize: 13, color: COLORS.textSecondary },
+  loadingText: { marginTop: 12, color: COLORS.textSecondary },
   errorText: {
     marginTop: 12,
-    color: "#E74C3C",
+    color: COLORS.danger,
     fontSize: 15,
     textAlign: "center",
   },
   retryBtn: {
     marginTop: 16,
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 10,
   },
-  retryText: { color: "#FFF", fontWeight: "600" },
-  emptyText: { color: "#666", fontSize: 15, marginTop: 12, fontWeight: "600" },
+  retryText: { color: COLORS.surface, fontWeight: "600" },
+  emptyText: { color: COLORS.textSecondary, fontSize: 15, marginTop: 12, fontWeight: "600" },
   emptySubtext: {
-    color: "#999",
+    color: COLORS.textMuted,
     fontSize: 13,
     marginTop: 6,
     textAlign: "center",

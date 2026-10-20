@@ -7,6 +7,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { COLORS } from "../../constants/colors";
 
 export default function PasswordInput({
   label,
@@ -30,7 +31,7 @@ export default function PasswordInput({
         <Ionicons
           name="lock-closed-outline"
           size={20}
-          color="#888"
+          color={COLORS.textMuted}
           style={styles.icon}
         />
         <TextInput
@@ -38,14 +39,14 @@ export default function PasswordInput({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#999"
+          placeholderTextColor={COLORS.textMuted}
           secureTextEntry={!isVisible}
         />
         <TouchableOpacity onPress={() => setIsVisible(!isVisible)}>
           <Ionicons
             name={isVisible ? "eye-outline" : "eye-off-outline"}
             size={20}
-            color="#888"
+            color={COLORS.textMuted}
           />
         </TouchableOpacity>
       </View>
@@ -61,20 +62,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#333333",
+    color: COLORS.textSecondary,
     marginBottom: 6,
   },
   required: {
-    color: "#E74C3C",
+    color: COLORS.danger,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#E8E8E8",
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 14,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: COLORS.surfaceAlt,
   },
   icon: {
     marginRight: 10,
@@ -83,13 +84,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: COLORS.textPrimary,
   },
   inputError: {
-    borderColor: "#E74C3C",
+    borderColor: COLORS.danger,
   },
   errorText: {
-    color: "#E74C3C",
+    color: COLORS.danger,
     fontSize: 12,
     marginTop: 4,
   },

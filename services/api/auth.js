@@ -58,48 +58,69 @@ export async function logoutUser(token) {
 }
 
 /**
- * Fetches the list of classrooms from the API.
+ * Checks if a session token is still valid.
+ * @param {string} token - The Bearer token
+ */
+export async function checkSession(token) {
+  const url = `${API_BASE_URL}?action=session-check`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  return response.json();
+}
+
+/**
+ * Requests a password reset link/token for the given email.
+ * @param {string} email
+ */
+export async function requestPasswordReset(param1, param2) {
+  const email = param2 ? param2 : param1;
+  return postAction("forgot-password", { email });
+}
+
+/**
+ * Verifies if a reset token is valid and not expired.
+ * @param {string} token
+ */
+export async function verifyResetToken(token) {
+  return postAction("verify-reset-token", { token });
+}
+
+/**
+ * Resets the password using the reset token.
+ * @param {string} resetToken
+ * @param {string} newPassword
+ * @param {string} confirmPassword
+ */
+export async function resetPassword(arg1, arg2, arg3, arg4) {
+  let token, newPassword, confirmPassword;
+  if (arg4 !== undefined) {
+    token = arg2;
+    newPassword = arg3;
+    confirmPassword = arg4;
+  } else {
+    token = arg1;
+    newPassword = arg2;
+    confirmPassword = arg3;
+  }
+
+  return postAction("reset-password", {
+    token,
+    new_password: newPassword,
+    confirm_password: confirmPassword,
+  });
+}
+
+/**
+ * Changes user password when authenticated.
  * @param {string} token - Bearer token
- * @param {object} filters - Optional { building, room_type, min_capacity, status }
+ * @param {string} currentPassword
+ * @param {string} newPassword
+ * @param {string} confirmPassword
  */
-export async function fetchClassrooms(token, filters = {}) {
-  const query = new URLSearchParams(filters).toString();
-  const url = `${API_BASE_URL}?action=classrooms${query ? "&" + query : ""}`;
-
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  return response.json();
-}
-
-/**
- * Fetches the list of equipment from the API.
- */
-export async function fetchEquipment(token, filters = {}) {
-  const query = new URLSearchParams(filters).toString();
-  const url = `${API_BASE_URL}?action=equipment${query ? "&" + query : ""}`;
-
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  return response.json();
-}
-
-/**
- * Creates a new booking (classroom or equipment).
- * @param {string} token - Bearer token
- * @param {object} payload - { resource_type, resource_id, allocation_date, start_time, end_time, purpose, priority }
- */
-export async function createBooking(token, payload) {
-  const url = `${API_BASE_URL}?action=create-booking`;
+export async function changePassword(token, currentPassword, newPassword, confirmPassword) {
+  const url = `${API_BASE_URL}?action=change-password`;
 
   const response = await fetch(url, {
     method: "POST",
@@ -107,132 +128,71 @@ export async function createBooking(token, payload) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    }),
   });
 
   return response.json();
 }
 
 /**
- * Fetches the current user's bookings.
+ * Fetches the authenticated user's profile.
  */
-export async function fetchMyBookings(token) {
-  const url = `${API_BASE_URL}?action=my-bookings`;
-
+export async function fetchMyProfile(token) {
+  const url = `${API_BASE_URL}?action=my-profile`;
   const response = await fetch(url, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-
   return response.json();
 }
 
 /**
- * Fetches a single booking by ID.
+ * Updates the authenticated user's editable profile fields.
  */
-export async function fetchBooking(token, bookingId) {
-  const url = `${API_BASE_URL}?action=booking&id=${bookingId}`;
-
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  return response.json();
-}
-
-/**
- * Cancels a booking by ID.
- */
-export async function cancelBooking(token, bookingId, reason = "") {
-  const url = `${API_BASE_URL}?action=cancel-booking`;
-
+export async function updateMyProfile(token, data) {
+  const url = `${API_BASE_URL}?action=update-my-profile`;
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ allocation_id: bookingId, reason }),
-  });
-
-  return response.json();
-}
-
-export async function fetchPendingBookings(token) {
-  const url = `${API_BASE_URL}?action=pending-bookings`;
-  const response = await fetch(url, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      full_name: data.full_name,
+      phone_number: data.phone_number,
+    }),
   });
   return response.json();
 }
 
-export async function approveBooking(token, bookingId) {
-  const url = `${API_BASE_URL}?action=approve-booking`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ allocation_id: bookingId }),
-  });
-  return response.json();
-}
-
-export async function rejectBooking(token, bookingId, notes = "") {
-  const url = `${API_BASE_URL}?action=reject-booking`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ allocation_id: bookingId, notes }),
-  });
-  return response.json();
-}
-
-export async function cancelApprovedBooking(token, bookingId, reason = '') {
-    const url = `${API_BASE_URL}?action=cancel-approved-booking`;
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ allocation_id: bookingId, reason }),
-    });
-    return response.json();
-}
-
-export async function checkInBooking(token, bookingId) {
-    const url = `${API_BASE_URL}?action=check-in`;
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ allocation_id: bookingId }),
-    });
-    return response.json();
-}
-
-export async function checkOutBooking(token, bookingId) {
-    const url = `${API_BASE_URL}?action=check-out`;
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ allocation_id: bookingId }),
-    });
-    return response.json();
-}
+// Re-exports for backward compatibility
+export { fetchClassrooms, fetchClassroom } from "./classrooms";
+export { fetchEquipment, fetchEquipmentItem } from "./equipment";
+export {
+  createBooking,
+  fetchMyBookings,
+  fetchBooking,
+  cancelBooking,
+  cancelApprovedBooking,
+  rescheduleBooking,
+  checkInBooking,
+  checkOutBooking,
+} from "./bookings";
+export { fetchPendingBookings, approveBooking, rejectBooking } from "./admin";
+export {
+  fetchAdminUsers,
+  fetchAdminUser,
+  updateAdminUserStatus,
+} from "./adminUsers";
+export {
+  fetchMyNotifications,
+  fetchNotificationCount,
+  markNotificationRead,
+  markAllNotificationsRead,
+} from "./notifications";

@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import PrimaryButton from '../../components/ui/PrimaryButton';
+import { COLORS } from '../../constants/colors';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -78,11 +79,11 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: COLORS.background,
   },
   container: {
     flex: 1,
-    backgroundColor: "#F5F7FA",
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -100,10 +101,10 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 18,
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#4A90E2",
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -112,20 +113,20 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: COLORS.surface,
   },
   title: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#1A1A1A",
+    color: COLORS.textPrimary,
   },
   subtitle: {
     fontSize: 14,
-    color: "#666666",
+    color: COLORS.textSecondary,
     marginTop: 4,
   },
   content: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 24,
     shadowColor: "#000000",
@@ -136,7 +137,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: "#666666",
+    color: COLORS.textSecondary,
     textAlign: "center",
     marginBottom: 24,
   },
@@ -153,24 +154,24 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 6,
   },
   stepNumberText: {
-    color: "#FFFFFF",
+    color: COLORS.surface,
     fontSize: 18,
     fontWeight: "bold",
   },
   stepText: {
     fontSize: 12,
-    color: "#333333",
+    color: COLORS.textSecondary,
   },
   stepLine: {
     width: 40,
     height: 1.5,
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     marginHorizontal: 8,
   },
   startButton: {
@@ -181,11 +182,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   footerText: {
-    color: "#666666",
+    color: COLORS.textSecondary,
     fontSize: 14,
   },
   footerLink: {
-    color: "#4A90E2",
+    color: COLORS.primary,
     fontSize: 14,
     fontWeight: "600",
   },

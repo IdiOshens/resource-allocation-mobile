@@ -16,6 +16,7 @@ import CustomInput from "../../components/ui/CustomInput";
 import PasswordInput from "../../components/ui/PasswordInput";
 import PrimaryButton from "../../components/ui/PrimaryButton";
 import { useAuth } from "../../contexts/AuthContext";
+import { COLORS } from "../../constants/colors";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -134,24 +135,24 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F5F7FA" },
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
+  safeArea: { flex: 1, backgroundColor: COLORS.background },
+  container: { flex: 1, backgroundColor: COLORS.background },
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 40 },
   logoContainer: { alignItems: "center", marginBottom: 40 },
   logoBox: {
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
   },
-  logoText: { fontSize: 28, fontWeight: "bold", color: "#FFFFFF" },
-  welcomeText: { fontSize: 26, fontWeight: "bold", color: "#1A1A1A" },
-  subtitle: { fontSize: 14, color: "#666666", marginTop: 4 },
+  logoText: { fontSize: 28, fontWeight: "bold", color: COLORS.surface },
+  welcomeText: { fontSize: 26, fontWeight: "bold", color: COLORS.textPrimary },
+  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4 },
   form: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
     padding: 24,
     shadowColor: "#000000",
@@ -161,9 +162,9 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   forgotPassword: { alignSelf: "flex-end", marginBottom: 24 },
-  forgotPasswordText: { color: "#4A90E2", fontSize: 14 },
+  forgotPasswordText: { color: COLORS.primary, fontSize: 14 },
   loginButton: { marginBottom: 18 },
   footer: { flexDirection: "row", justifyContent: "center" },
-  footerText: { color: "#666666", fontSize: 14 },
-  footerLink: { color: "#4A90E2", fontSize: 14, fontWeight: "600" },
+  footerText: { color: COLORS.textSecondary, fontSize: 14 },
+  footerLink: { color: COLORS.primary, fontSize: 14, fontWeight: "600" },
 });

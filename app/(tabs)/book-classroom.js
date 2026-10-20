@@ -14,8 +14,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import DatePickerField from "../../components/ui/DatePickerField";
+import TimePickerField from "../../components/ui/TimePickerField";
 import { useAuth } from "../../contexts/AuthContext";
 import { createBooking } from "../../services/api/auth";
+import { COLORS } from "../../constants/colors";
 
 export default function BookClassroomScreen() {
   const router = useRouter();
@@ -37,13 +40,13 @@ export default function BookClassroomScreen() {
     const e = {};
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      e.date = "Use format YYYY-MM-DD (e.g. 2026-10-15)";
+      e.date = "Please select a date";
     }
     if (!/^\d{2}:\d{2}$/.test(startTime)) {
-      e.startTime = "Use format HH:MM (e.g. 09:00)";
+      e.startTime = "Please select start time";
     }
     if (!/^\d{2}:\d{2}$/.test(endTime)) {
-      e.endTime = "Use format HH:MM (e.g. 11:00)";
+      e.endTime = "Please select end time";
     }
     if (startTime && endTime && startTime >= endTime) {
       e.endTime = "End time must be after start time";
@@ -110,41 +113,50 @@ export default function BookClassroomScreen() {
             style={styles.backBtn}
             onPress={() => router.back()}
           >
-            <Ionicons name="arrow-back-outline" size={24} color="#4A90E2" />
+            <Ionicons name="arrow-back-outline" size={24} color={COLORS.primary} />
             <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
 
           <Text style={styles.title}>Book Classroom</Text>
           <Text style={styles.subtitle}>{roomLabel}</Text>
 
-          <Field
-            label="Date (YYYY-MM-DD)"
+          <DatePickerField
+            label="Date"
             value={date}
-            onChangeText={setDate}
-            placeholder="2026-10-15"
+            onChange={(val) => {
+              setDate(val);
+              setErrors((prev) => ({ ...prev, date: null }));
+            }}
+            placeholder="Select date"
             error={errors.date}
-            icon="calendar-outline"
+            required
           />
 
           <View style={styles.row}>
             <View style={styles.half}>
-              <Field
-                label="Start (HH:MM)"
+              <TimePickerField
+                label="Start Time"
                 value={startTime}
-                onChangeText={setStartTime}
+                onChange={(val) => {
+                  setStartTime(val);
+                  setErrors((prev) => ({ ...prev, startTime: null }));
+                }}
                 placeholder="09:00"
                 error={errors.startTime}
-                icon="time-outline"
+                required
               />
             </View>
             <View style={styles.half}>
-              <Field
-                label="End (HH:MM)"
+              <TimePickerField
+                label="End Time"
                 value={endTime}
-                onChangeText={setEndTime}
+                onChange={(val) => {
+                  setEndTime(val);
+                  setErrors((prev) => ({ ...prev, endTime: null }));
+                }}
                 placeholder="11:00"
                 error={errors.endTime}
-                icon="time-outline"
+                required
               />
             </View>
           </View>
@@ -156,7 +168,7 @@ export default function BookClassroomScreen() {
               value={purpose}
               onChangeText={setPurpose}
               placeholder="Why do you need this room?"
-              placeholderTextColor="#999"
+              placeholderTextColor={COLORS.textMuted}
               multiline
               numberOfLines={3}
             />
@@ -205,65 +217,41 @@ export default function BookClassroomScreen() {
   );
 }
 
-function Field({ label, value, onChangeText, placeholder, error, icon }) {
-  return (
-    <View style={styles.group}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputWrap, error && styles.inputError]}>
-        <Ionicons
-          name={icon}
-          size={18}
-          color="#888"
-          style={{ marginRight: 8 }}
-        />
-        <TextInput
-          style={styles.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor="#999"
-          autoCapitalize="none"
-        />
-      </View>
-      {error && <Text style={styles.errorText}>{error}</Text>}
-    </View>
-  );
-}
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#FFFFFF" },
-  container: { flex: 1, backgroundColor: "#FFFFFF" },
+  safeArea: { flex: 1, backgroundColor: COLORS.surface },
+  container: { flex: 1, backgroundColor: COLORS.surface },
   scrollContent: { paddingHorizontal: 24, paddingBottom: 40, paddingTop: 16 },
   backBtn: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  backText: { fontSize: 16, color: "#4A90E2", marginLeft: 4 },
-  title: { fontSize: 26, fontWeight: "bold", color: "#1A1A1A" },
-  subtitle: { fontSize: 15, color: "#666", marginTop: 4, marginBottom: 24 },
+  backText: { fontSize: 16, color: COLORS.primary, marginLeft: 4 },
+  title: { fontSize: 26, fontWeight: "bold", color: COLORS.textPrimary },
+  subtitle: { fontSize: 15, color: COLORS.textSecondary, marginTop: 4, marginBottom: 24 },
   group: { marginBottom: 16 },
-  label: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 6 },
+  label: { fontSize: 14, fontWeight: "600", color: COLORS.textSecondary, marginBottom: 6 },
   inputWrap: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#E8E8E8",
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 12,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: COLORS.surfaceAlt,
   },
-  input: { flex: 1, paddingVertical: 12, fontSize: 15, color: "#1A1A1A" },
+  input: { flex: 1, paddingVertical: 12, fontSize: 15, color: COLORS.textPrimary },
   textArea: {
     borderWidth: 1.5,
-    borderColor: "#E8E8E8",
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: COLORS.surfaceAlt,
     fontSize: 15,
     minHeight: 80,
     textAlignVertical: "top",
-    color: "#1A1A1A",
+    color: COLORS.textPrimary,
   },
-  inputError: { borderColor: "#E74C3C" },
-  errorText: { color: "#E74C3C", fontSize: 12, marginTop: 4 },
+  inputError: { borderColor: COLORS.danger },
+  errorText: { color: COLORS.danger, fontSize: 12, marginTop: 4 },
   row: { flexDirection: "row", gap: 12 },
   half: { flex: 1 },
   priorityBtn: {
@@ -271,25 +259,25 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: "#E0E0E0",
+    borderColor: COLORS.border,
     alignItems: "center",
-    backgroundColor: "#FAFAFA",
+    backgroundColor: COLORS.surfaceAlt,
   },
-  priorityBtnActive: { backgroundColor: "#4A90E2", borderColor: "#4A90E2" },
+  priorityBtnActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
   priorityText: {
     fontSize: 14,
-    color: "#666",
+    color: COLORS.textSecondary,
     fontWeight: "600",
     textTransform: "capitalize",
   },
-  priorityTextActive: { color: "#FFF" },
+  priorityTextActive: { color: COLORS.surface },
   submit: {
     marginTop: 16,
-    backgroundColor: "#4A90E2",
+    backgroundColor: COLORS.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
   },
   submitDisabled: { opacity: 0.6 },
-  submitText: { color: "#FFF", fontSize: 16, fontWeight: "600" },
+  submitText: { color: COLORS.surface, fontSize: 16, fontWeight: "600" },
 });

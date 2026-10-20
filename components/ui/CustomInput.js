@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, TextInput, View } from "react-native";
+import { COLORS } from "../../constants/colors";
 
 export default function CustomInput({
   label,
@@ -24,14 +25,14 @@ export default function CustomInput({
       )}
       <View style={[styles.inputWrapper, error && styles.inputError]}>
         {icon && (
-          <Ionicons name={icon} size={20} color="#888" style={styles.icon} />
+          <Ionicons name={icon} size={20} color={COLORS.textMuted} style={styles.icon} />
         )}
         <TextInput
           style={[styles.input, !icon && styles.inputWithoutIcon]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#999"
+          placeholderTextColor={COLORS.textMuted}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           secureTextEntry={secureTextEntry}
@@ -50,20 +51,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#333333",
+    color: COLORS.textSecondary,
     marginBottom: 6,
   },
   required: {
-    color: "#E74C3C",
+    color: COLORS.danger,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#E8E8E8",
+    borderColor: COLORS.border,
     borderRadius: 12,
     paddingHorizontal: 14,
-    backgroundColor: "#FAFAFA",
+    backgroundColor: COLORS.surfaceAlt,
   },
   icon: {
     marginRight: 10,
@@ -72,16 +73,16 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     fontSize: 16,
-    color: "#1A1A1A",
+    color: COLORS.textPrimary,
   },
   inputWithoutIcon: {
     paddingLeft: 0,
   },
   inputError: {
-    borderColor: "#E74C3C",
+    borderColor: COLORS.danger,
   },
   errorText: {
-    color: "#E74C3C",
+    color: COLORS.danger,
     fontSize: 12,
     marginTop: 4,
   },

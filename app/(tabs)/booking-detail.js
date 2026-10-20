@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -20,13 +20,14 @@ import {
     checkOutBooking,
     fetchBooking,
 } from "../../services/api/auth";
+import { COLORS } from "../../constants/colors";
 
 const STATUS_COLORS = {
-  pending: { bg: "#FFF4E5", fg: "#B7700B" },
-  approved: { bg: "#E8F8F0", fg: "#1E8449" },
-  rejected: { bg: "#FDEDEC", fg: "#B03A2E" },
-  cancelled: { bg: "#F0F0F0", fg: "#666666" },
-  completed: { bg: "#EAF2F8", fg: "#21618C" },
+  pending: { bg: COLORS.warningBg, fg: COLORS.warning },
+  approved: { bg: COLORS.successBg, fg: COLORS.success },
+  rejected: { bg: COLORS.dangerBg, fg: COLORS.danger },
+  cancelled: { bg: COLORS.neutralBg, fg: COLORS.textSecondary },
+  completed: { bg: COLORS.surfaceAlt, fg: COLORS.primary },
 };
 
 export default function BookingDetailScreen() {
@@ -41,7 +42,7 @@ export default function BookingDetailScreen() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setError(null);
       const result = await fetchBooking(token, bookingId);
@@ -55,15 +56,16 @@ export default function BookingDetailScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [bookingId, token]);
 
-  useEffect(() => {
-    // Reset state when the screen opens a different booking
-    setBooking(null);
-    setLoading(true);
-    setError(null);
-    load();
-  }, [bookingId]);
+  useFocusEffect(
+    useCallback(() => {
+      setBooking(null);
+      setLoading(true);
+      setError(null);
+      load();
+    }, [load]),
+  );
 
   const doAction = (actionLabel, actionFn, successMessage) => {
     Alert.alert(
@@ -100,7 +102,7 @@ export default function BookingDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#4A90E2" />
+          <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Loading booking…</Text>
         </View>
       </SafeAreaView>
@@ -111,11 +113,11 @@ export default function BookingDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back-outline" size={24} color="#4A90E2" />
+          <Ionicons name="arrow-back-outline" size={24} color={COLORS.primary} />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
         <View style={styles.center}>
-          <Ionicons name="alert-circle-outline" size={48} color="#E74C3C" />
+          <Ionicons name="alert-circle-outline" size={48} color={COLORS.danger} />
           <Text style={styles.errorText}>{error ?? "Booking not found"}</Text>
         </View>
       </SafeAreaView>
@@ -129,6 +131,8 @@ export default function BookingDetailScreen() {
   const canCancelApproved =
     booking.status === "approved" && !booking.checked_in_at;
   const canCheckIn = booking.status === "approved" && !booking.checked_in_at;
+  const canReschedule =
+    ["pending", "approved"].includes(booking.status) && !booking.checked_in_at;
   const canCheckOut =
     booking.status === "approved" &&
     booking.checked_in_at &&
@@ -138,7 +142,7 @@ export default function BookingDetailScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back-outline" size={24} color="#4A90E2" />
+          <Ionicons name="arrow-back-outline" size={24} color={COLORS.primary} />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
 
@@ -212,6 +216,31 @@ export default function BookingDetailScreen() {
 
         {/* Action buttons */}
 
+        {canReschedule && (
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              styles.primaryBtn,
+              busy && styles.disabled,
+            ]}
+            onPress={() =>
+              router.push({
+                pathname: "/(tabs)/reschedule-booking",
+                params: {
+                  id: String(booking.allocation_id),
+                  allocation_date: booking.allocation_date,
+                  start_time: booking.start_time,
+                  end_time: booking.end_time,
+                },
+              })
+            }
+            disabled={busy}
+          >
+            <Ionicons name="calendar-outline" size={20} color={COLORS.surface} />
+            <Text style={styles.actionText}>Reschedule</Text>
+          </TouchableOpacity>
+        )}
+
         {canCheckIn && (
           <TouchableOpacity
             style={[
@@ -228,7 +257,7 @@ export default function BookingDetailScreen() {
             }
             disabled={busy}
           >
-            <Ionicons name="log-in-outline" size={20} color="#FFF" />
+            <Ionicons name="log-in-outline" size={20} color={COLORS.surface} />
             <Text style={styles.actionText}>Check In</Text>
           </TouchableOpacity>
         )}
@@ -249,7 +278,7 @@ export default function BookingDetailScreen() {
             }
             disabled={busy}
           >
-            <Ionicons name="log-out-outline" size={20} color="#FFF" />
+            <Ionicons name="log-out-outline" size={20} color={COLORS.surface} />
             <Text style={styles.actionText}>Check Out & Complete</Text>
           </TouchableOpacity>
         )}
@@ -270,7 +299,7 @@ export default function BookingDetailScreen() {
             }
             disabled={busy}
           >
-            <Ionicons name="close-circle-outline" size={20} color="#FFF" />
+            <Ionicons name="close-circle-outline" size={20} color={COLORS.surface} />
             <Text style={styles.actionText}>Cancel Booking</Text>
           </TouchableOpacity>
         )}
@@ -292,7 +321,7 @@ export default function BookingDetailScreen() {
             }
             disabled={busy}
           >
-            <Ionicons name="close-circle-outline" size={20} color="#FFF" />
+            <Ionicons name="close-circle-outline" size={20} color={COLORS.surface} />
             <Text style={styles.actionText}>Cancel Booking</Text>
           </TouchableOpacity>
         )}
@@ -307,7 +336,7 @@ function Detail({ label, value, icon }) {
       <Ionicons
         name={icon}
         size={16}
-        color="#666"
+        color={COLORS.textSecondary}
         style={{ marginRight: 8, marginTop: 2 }}
       />
       <View style={{ flex: 1 }}>
@@ -319,7 +348,7 @@ function Detail({ label, value, icon }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F5F7FA" },
+  container: { flex: 1, backgroundColor: COLORS.background },
   scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 },
   center: {
     flex: 1,
@@ -328,9 +357,9 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   backBtn: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  backText: { fontSize: 16, color: "#4A90E2", marginLeft: 4 },
-  title: { fontSize: 26, fontWeight: "bold", color: "#1A1A1A" },
-  subtitle: { fontSize: 14, color: "#666", marginTop: 4, marginBottom: 16 },
+  backText: { fontSize: 16, color: COLORS.primary, marginLeft: 4 },
+  title: { fontSize: 26, fontWeight: "bold", color: COLORS.textPrimary },
+  subtitle: { fontSize: 14, color: COLORS.textSecondary, marginTop: 4, marginBottom: 16 },
   badge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -339,7 +368,7 @@ const styles = StyleSheet.create({
   },
   badgeText: { fontSize: 12, fontWeight: "700", textTransform: "uppercase" },
   card: {
-    backgroundColor: "#FFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
@@ -352,13 +381,13 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: "row", paddingVertical: 8 },
   detailLabel: {
     fontSize: 12,
-    color: "#888",
+    color: COLORS.textMuted,
     textTransform: "uppercase",
     letterSpacing: 0.6,
   },
   detailValue: {
     fontSize: 15,
-    color: "#1A1A1A",
+    color: COLORS.textPrimary,
     marginTop: 2,
     textTransform: "capitalize",
   },
@@ -371,15 +400,15 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
   },
-  primaryBtn: { backgroundColor: "#4A90E2" },
-  successBtn: { backgroundColor: "#2ECC71" },
-  dangerBtn: { backgroundColor: "#E74C3C" },
-  actionText: { color: "#FFF", fontSize: 15, fontWeight: "700" },
+  primaryBtn: { backgroundColor: COLORS.primary },
+  successBtn: { backgroundColor: COLORS.success },
+  dangerBtn: { backgroundColor: COLORS.danger },
+  actionText: { color: COLORS.surface, fontSize: 15, fontWeight: "700" },
   disabled: { opacity: 0.6 },
-  loadingText: { marginTop: 12, color: "#666" },
+  loadingText: { marginTop: 12, color: COLORS.textSecondary },
   errorText: {
     marginTop: 12,
-    color: "#E74C3C",
+    color: COLORS.danger,
     fontSize: 15,
     textAlign: "center",
   },
